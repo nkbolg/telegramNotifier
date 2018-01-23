@@ -1,4 +1,5 @@
 import logging
+import argparse
 from time import sleep
 
 from telegram_notifier import telegram_notify
@@ -9,11 +10,16 @@ logging.basicConfig(level=logging.INFO,
 
 logger = logging.getLogger(__name__)
 
-
-@telegram_notify(token, 'drBaloo', 'this is a message')
-def fn():
-    sleep(10)
-
-
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--username', dest='uname')
+    parser.add_argument('--message', dest='msg')
+    args = parser.parse_args()
+    
+    @telegram_notify(token, args.uname, args.msg)
+    def fn():
+        sleep(10)
+
     fn()
+
