@@ -31,7 +31,8 @@ def ask_for_registration(token):
 
     # sleep for 25 seconds or until user registered
     sleeps_count = 0
-    while not stopper.stop and sleeps_count < 25:
+    treshold = 25
+    while not stopper.stop and sleeps_count < treshold:
         sleep(1)
         sleeps_count += 1
     updater.stop()
