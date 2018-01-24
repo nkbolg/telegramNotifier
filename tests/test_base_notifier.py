@@ -1,6 +1,8 @@
 from functools import partial
+from time import sleep
 
-from src.notifier import base_notify
+import pytest
+from notifier import base_notify
 
 
 class NotificationsAggregator:
@@ -18,6 +20,7 @@ class NotificationsAggregator:
         self.pre_called = True
 
     def notify(self, *args, **kwargs):
+        del kwargs['elapsed']
         self.received_args_notify = (args, kwargs)
         self.notify_called = True
 
@@ -26,11 +29,11 @@ class NotificationsAggregator:
         self.post_called = True
 
 
-def test_base_notifier():
+def test_arguments():
     aggr = NotificationsAggregator()
     test_notify = partial(base_notify, aggr.notify, pre_fn=aggr.pre, post_fn=aggr.post)
-    args_out = (1,2,3)
-    kwargs_out = {'kw1':'one', 'kw2':'two', 'kw3':'three'}
+    args_out = (1, 2, 3)
+    kwargs_out = {'kw1': 'one', 'kw2': 'two', 'kw3': 'three'}
     args_in = (4, 5, 6)
     kwargs_in = {'kw4': 'four', 'kw5': 'five', 'kw6': 'six'}
 
@@ -42,8 +45,24 @@ def test_base_notifier():
     assert aggr.pre_called
     assert aggr.received_args_pre == (args_out, kwargs_out)
 
-    assert aggr.notify_called
-    assert aggr.received_args_notify == (args_out, kwargs_out)
+    assert not aggr.notify_called
 
     assert aggr.post_called
     assert aggr.received_args_post == (args_out, kwargs_out)
+
+    decorated_fn(*args_in, **kwargs_in)
+
+    assert aggr.notify_called
+    assert aggr.received_args_notify == (args_out, kwargs_out)
+
+
+@pytest.mark.parametrize('_', range(5))
+def test_measure(_):
+    def fn(elapsed):
+        assert elapsed == pytest.approx(0.5, 0.005)
+
+    @base_notify(fn)
+    def sleeper():
+        sleep(0.5)
+
+    sleeper()
